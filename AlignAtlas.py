@@ -1,18 +1,14 @@
 import tkinter as tk
-from tkinter import filedialog
-#from tkinter import colorchooser
-#from PIL import Image, ImageOps, ImageTk, ImageFilter
-#from tkinter import ttk
+#from tkinter import filedialog
+from GUIWindow import AtlasGUI
+
+#initalize GUI
+testObj = AtlasGUI()
+
+#event binding calling resizer (and passing dims) every time testObj changes size
+testObj.bind('<Configure>', testObj.resizer)
+
+#Call tkinter main loop
+testObj.mainloop()
 
 
-root = tk.Tk()
-root.geometry("1000x600")
-root.title("Align Atlas")
-root.config(bg="white")
-
-pen_color = "black"
-pen_size = 5
-file_path = ""
-
-
-root.mainloop()
