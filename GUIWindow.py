@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog
 from PIL import ImageTk, Image #python img library needed for resizing
-import threading as th #for cooldown timer on resize, may have later applications
 #from tkinter import ttk
+import math # for floor
 
 
 
@@ -10,32 +10,36 @@ import threading as th #for cooldown timer on resize, may have later application
 def donothing():
 	print("ok!")
 
-#Class ImageWindow extends tk.Tk, allowing the use of components present in the Tk() class!
+# Class AtlasGUI extends tk.Tk, allowing the use of components present in the Tk() class!
 class AtlasGUI(tk.Tk):
-	#init allows acceptance of arbitrary number of args
+	# Init function allows acceptance of arbitrary number of args to support our parent class
+	# not yet sure if this is nessecary
 	def __init__(self, *args, **kwargs):
 		#Init our parent tk class
 		tk.Tk.__init__(self, *args, **kwargs)
 
 
-		#Add Title to Window
+		# Add Title to Window
 		self.title("Align Atlas Window")
 		self.geometry("1000x600")
 		self.config(bg = "white")
 
 
-		#Initalzie image variables to something predictable
+		# Initalzie image variables to something predictable
 		self.img_path = ''
-		#create canvas
+		
+		# Create tkinter canvas
+		self.canvas_width = 800
+		self.canvas_height = 500
 		self.canvas = tk.Canvas(self, width=800, height=500, bg="Blue")
 
-		#menuBar is our bar containing subsequent menus
+		# MenuBar is our main bar containing subsequent menus
 		menuBar = tk.Menu(self)
 
-		#subsequent menus
+		# Subsequent menus defined here
 		filemenu = tk.Menu(menuBar, tearoff=0)
 
-		#filemenu commands
+		# Filemenu commands
 		filemenu.add_command(label="New", command=donothing)
 		filemenu.add_command(label="Open", command=self.File_Open)
 		filemenu.add_command(label="Save", command=donothing)
@@ -45,77 +49,91 @@ class AtlasGUI(tk.Tk):
 		# Add menuBar to AtlasGUI
 		self.config(menu = menuBar)
 
-		#attach subsequent menus to menubar
+		# Attach subsequent menus to menubar
 		menuBar.add_cascade(label="File", menu=filemenu)
 
-		#cooldown timer
-		self.resizeCooldown = False
-		self.resizeTimer = th.Timer(1.0, self.endCooldown) 
+		# Attach resize button
+		menuBar.add_command(label="Resize", command=self.resizer)
 
-	#Timer function that ends the resize cooldown
-	def endCooldown(self):
-		print("ending cooldown!", self.resizeCooldown)
-		self.resizeCooldown = False
-		print("ended cooldown!", self.resizeCooldown)
-	#adds image to screen
+
+	# Resizes the image on the canvas widget, if possible
+	# Image is never streached by this operation
+	def resizer(self):
+
+		# Only execute if we have an image path, and canvas exists
+		if ((self.img_path != '') and (self.canvas != None)):
+
+			# Define these as globals to avoid over-zealous Tkinter garbage collection
+			global rzr_image, rzr_resized_image, rzr_photoImage
+
+			# Open the image
+			rzr_image = Image.open(self.img_path)
+
+			#Calculate multipliers to get image dimensions = canvas dimenstions 
+			width_multiplier = self.canvas_width/ rzr_image.width 
+			height_multiplier = self.canvas_height / rzr_image.height
+
+			#Choose the minimum multiplier, so nothing gets cut off
+			min_multiplier = min(width_multiplier, height_multiplier)
+
+			#Choose calculate new width and height
+			new_width = math.floor(rzr_image.width * min_multiplier)
+			new_height = math.floor(rzr_image.height * min_multiplier)
+
+			# If our width and height are greater than zero map it
+			if ((new_width > 0) and (new_height > 0)):
+				rzr_resized_image = rzr_image.resize((new_width, new_height))
+
+				# Define photoimage to insert into canvas
+				rzr_photoImage = ImageTk.PhotoImage(rzr_resized_image)
+				
+				# Set photoimage in canvas
+				self.canvas.create_image(0,0, image=rzr_photoImage, anchor="nw")
+			# If for some reason it's too small, just clear the canvas
+			else:
+				self.canvas.delete('all')
+
+
+	# Is called each time resize keybind event is fired, simply calls resizer
+	def onResizeEvent(self, e):
+		self.resizer()
+
+	# Is called each time tkinter <Configure> event is fired, stores updated width and height of canvas
+	def onSizeChange(self, e):
+		self.canvas_width = e.width
+		self.canvas_height = e.height
+
+	# Opens new image
 	def File_Open(self):
 
-		#If a canvas exists, we need to close the previous image first
-		if(self.canvas != None):
-			self.File_Close()
+		# Call close file to make sure canvas is cleared
+		self.File_Close()
 
-		#Open file dialog and acquire the image.
+		# Open file dialog and acquire the image path.
 		self.img_path = ''
 		self.img_path = filedialog.askopenfilename()
 
-		#If the image was acquired, continue
+		# If the image path was acquired, continue
 		if (self.img_path != ''):
-			#define tkinter photoimage
+			# Define tkinter photoimage
 			photoImage = ImageTk.PhotoImage(file=self.img_path)
 			
-			#fill the canvas up - probably delete
+			# Make canvas fill entire box
 			self.canvas.pack(fill="both", expand=True)
 
-			#unexplicably - image will not load without this 
-			self.img=photoImage
-
-			# Set image in canvas
+			# Set photoimage in canvas
 			self.canvas.create_image(0,0, image=photoImage, anchor="nw")
 
-	#event function called on each new resize
-	#e is the event with the height and width	
-	def resizer(self, e):
-		print("resizer called, cooldown:", self.resizeCooldown)
-		if(self.resizeCooldown):
-			return
-		else:
-			#begin our resizecooldown
-			self.resizeCooldown = True
-
-		if ((self.img_path != '') and (self.canvas != None)):
-			#Define these as globals to avoid over-zealous Tkinter garbage collection
-			global rzr_image, rzr_resized_image, rzr_photoImage
-
-			#open the image
-			rzr_image = Image.open(self.img_path)
-
-			#resize image and antialias it
-			rzr_resized_image = rzr_image.resize((e.width, e.height), Image.ANTIALIAS)
-
-			#define image again
-			rzr_photoImage = ImageTk.PhotoImage(rzr_resized_image)
-			
-			# Set image in canvas
-			self.canvas.create_image(0,0, image=rzr_photoImage, anchor="nw")
-			print("resizing!!")
+			# Resize the image
+			self.resizer()
 
 
-		self.resizeTimer.start()
-
+	# Closes image - clearing it from the canvas widget if possible
 	def File_Close(self):
-		#if a canvas exists, delete it
+		# If a canvas exists, clear it's contents and image path
 		if(self.canvas):
 			self.canvas.delete('all')
+			self.img_path = ''
 
 
 #Maybe a seperate toolswindow?

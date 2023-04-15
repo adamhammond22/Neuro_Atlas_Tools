@@ -6,7 +6,10 @@ from GUIWindow import AtlasGUI
 testObj = AtlasGUI()
 
 #event binding calling resizer (and passing dims) every time testObj changes size
-testObj.bind('<Configure>', testObj.resizer)
+testObj.bind('<Configure>', testObj.onSizeChange)
+testObj.bind('<r>', testObj.onResizeEvent)
+
+#testObj.bind('<ButtonRelease-1>', testObj.resizer)
 
 #Call tkinter main loop
 testObj.mainloop()
