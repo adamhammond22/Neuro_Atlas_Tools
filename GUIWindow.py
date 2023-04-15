@@ -56,6 +56,11 @@ class AtlasGUI(tk.Tk):
 		menuBar.add_command(label="Resize", command=self.resizer)
 
 
+		menuBar.add_command(label="Background Toolbar", command=self.onBackgroundToolbar)
+
+		# References to other windows
+		self.BackgroundToolbar = None
+
 	# Resizes the image on the canvas widget, if possible
 	# Image is never streached by this operation
 	def resizer(self):
@@ -127,6 +132,14 @@ class AtlasGUI(tk.Tk):
 			# Resize the image
 			self.resizer()
 
+	# Opens a Background Toolbar or raises it if it's already opened
+	def onBackgroundToolbar(self):
+		if(self.BackgroundToolbar == None):
+			self.BackgroundToolbar = BackgroundToolbar(self)
+		else:
+			self.BackgroundToolbar.tkraise()
+			print(dir(self.BackgroundToolbar.tkraise()))
+
 
 	# Closes image - clearing it from the canvas widget if possible
 	def File_Close(self):
@@ -135,6 +148,24 @@ class AtlasGUI(tk.Tk):
 			self.canvas.delete('all')
 			self.img_path = ''
 
+
+class BackgroundToolbar(tk.Toplevel):
+	def __init__(self, parent):
+		#Init parent toplevel
+		tk.Toplevel.__init__(self)
+
+		# Add basic characteristics
+		self.geometry("300x500")
+		self.title("Background TB")
+		self.resizable(False, False)
+
+		# Add a protocol on deletion
+		self.protocol("WM_DELETE_WINDOW", self.onClosing)
+
+	# Remove parent's reference to this toolbar before deleting
+	def onClosing(self):
+		self.parent.BackgroundToolbar = None
+		self.destroy()
 
 #Maybe a seperate toolswindow?
 # class ToolsWindow(tk.TK):
