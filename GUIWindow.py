@@ -148,6 +148,16 @@ class AtlasGUI(tk.Tk):
 			self.canvas.delete('all')
 			self.img_path = ''
 
+	def rotateImg(self):
+		if(self.img_path != ''):
+			# Define these as globals to avoid over-zealous Tkinter garbage collection
+			global rt, rzr_resized_image, rt_photoImage
+			rt_image = Image.open(self.img_path)
+			rt_new_image = (rt_image).rotate(45)
+			rt_photoImage = ImageTk.PhotoImage(rt_new_image)
+			self.canvas.delete('all')
+			self.canvas.create_image(0,0, image=rt_photoImage, anchor="nw")
+    
 
 #Maybe a seperate toolswindow?
 # class ToolsWindow(tk.TK):

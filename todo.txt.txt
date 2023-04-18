@@ -1,0 +1,2 @@
+- padding for base image
+-slider tool for image adjustment 0-0 max-14 bit

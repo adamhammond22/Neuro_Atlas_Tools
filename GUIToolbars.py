@@ -18,6 +18,12 @@ class BackgroundToolbar(tk.Toplevel):
 		# Save reference to parent
 		self.parent = parent
 
+		B = tk.Button(self, text ="Rotate", command=self.parent.rotateImg())
+		B.pack()
+		self.slider1 = tk.Scale(self, from_=0, to=360, orient=tk.HORIZONTAL)
+		self.slider1.pack()
+
+
 	# Remove parent's reference to this toolbar before deleting
 	def onClosing(self):
 		self.parent.BackgroundToolbar = None
