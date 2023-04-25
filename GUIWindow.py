@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from PIL import ImageTk, Image #python img library needed for resizing
+import PIL
 #from tkinter import ttk
 import math # for floor
 from GUIToolbars import *
@@ -27,7 +28,9 @@ class AtlasGUI(tk.Tk):
 
 		# Initalzie image variables to something predictable
 		self.img_path = ''
-		
+		self.image = None
+		self.photoImage = None
+
 		# Create tkinter canvas
 		self.canvas_width = 800
 		self.canvas_height = 500
@@ -68,32 +71,33 @@ class AtlasGUI(tk.Tk):
 		# Only execute if we have an image path, and canvas exists
 		if ((self.img_path != '') and (self.canvas != None)):
 
-			# Define these as globals to avoid over-zealous Tkinter garbage collection
-			global rzr_image, rzr_resized_image, rzr_photoImage
+			# Define image and photoimage must be saved in class
+			# to avoid over-zealous Tkinter garbage collection
 
 			# Open the image
-			rzr_image = Image.open(self.img_path)
+			self.image = Image.open(self.img_path)
 
 			#Calculate multipliers to get image dimensions = canvas dimenstions 
-			width_multiplier = self.canvas_width/ rzr_image.width 
-			height_multiplier = self.canvas_height / rzr_image.height
+			width_multiplier = self.canvas_width/ self.image.width 
+			height_multiplier = self.canvas_height / self.image.height
 
 			#Choose the minimum multiplier, so nothing gets cut off
 			min_multiplier = min(width_multiplier, height_multiplier)
 
 			#Choose calculate new width and height
-			new_width = math.floor(rzr_image.width * min_multiplier)
-			new_height = math.floor(rzr_image.height * min_multiplier)
+			new_width = math.floor(self.image.width * min_multiplier)
+			new_height = math.floor(self.image.height * min_multiplier)
 
 			# If our width and height are greater than zero map it
 			if ((new_width > 0) and (new_height > 0)):
-				rzr_resized_image = rzr_image.resize((new_width, new_height))
-
-				# Define photoimage to insert into canvas
-				rzr_photoImage = ImageTk.PhotoImage(rzr_resized_image)
+				self.image = self.image.resize((new_width, new_height))
 				
+				# Define photoimage to insert into canvas
+				self.photoImage = ImageTk.PhotoImage(self.image)
+
 				# Set photoimage in canvas
-				self.canvas.create_image(0,0, image=rzr_photoImage, anchor="nw")
+				self.canvas.create_image(0,0, image=self.photoImage, anchor="nw")
+
 			# If for some reason it's too small, just clear the canvas
 			else:
 				self.canvas.delete('all')
@@ -147,19 +151,27 @@ class AtlasGUI(tk.Tk):
 		if(self.canvas):
 			self.canvas.delete('all')
 			self.img_path = ''
+			self.image = None
+			self.photoImage = None
 
-	def rotateImg(self):
-		if(self.img_path != ''):
-			# Define these as globals to avoid over-zealous Tkinter garbage collection
-			global rt, rzr_resized_image, rt_photoImage
-			rt_image = Image.open(self.img_path)
-			rt_new_image = (rt_image).rotate(45)
-			rt_photoImage = ImageTk.PhotoImage(rt_new_image)
-			self.canvas.delete('all')
-			self.canvas.create_image(0,0, image=rt_photoImage, anchor="nw")
-    
+
+	#Takes transformed image from toolbar and applies it to the canvas
+	def applyTransformedImage(self, transformed_image: PIL.Image.Image):
+		# Save ref to transformed image
+		self.image = transformed_image
+
+		# Define photoimage to insert into canvas
+		self.photoImage = ImageTk.PhotoImage(self.image)
+
+		# Set photoimage in canvas
+		self.canvas.create_image(0,0, image=self.photoImage, anchor="nw")
+
+		return
+
 
 #Maybe a seperate toolswindow?
+#PIL.Image.Image is image
+#PIL.ImageTk.PhotoImage is photoimage
 # class ToolsWindow(tk.TK):
 # 	pass
 # https://www.digitalocean.com/community/tutorials/tkinter-working-with-classes
