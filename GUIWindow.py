@@ -20,22 +20,23 @@ class AtlasGUI(tk.Tk):
 		tk.Tk.__init__(self, *args, **kwargs)
 
 
-		# Add Title to Window
+		# ===== Window tkinter details ===== #
 		self.title("Align Atlas Window")
 		self.geometry("1000x600")
 		self.config(bg = "white")
 
-
+		# ===== Handling image variables ===== #
 		# Initalzie image variables to something predictable
 		self.img_path = ''
 		self.image = None
 		self.photoImage = None
 
-		# Create tkinter canvas
+		# ===== Init Tkinter Canvas ===== #
 		self.canvas_width = 800
 		self.canvas_height = 500
 		self.canvas = tk.Canvas(self, width=800, height=500, bg="Blue")
 
+		# ===== Adding all Menus to the window ===== #
 		# MenuBar is our main bar containing subsequent menus
 		menuBar = tk.Menu(self)
 
@@ -58,11 +59,16 @@ class AtlasGUI(tk.Tk):
 		# Attach resize button
 		menuBar.add_command(label="Resize", command=self.resizer)
 
-
+		#Background Toolbar button	
 		menuBar.add_command(label="Background Toolbar", command=self.onBackgroundToolbar)
 
-		# References to other windows
+		# ===== Background Toolbar References ===== #
+
+		# Reference to toolbar object
 		self.BackgroundToolbar = None
+
+		#reference to slidervalues
+		self.backgroundSliderValues = None
 
 	# Resizes the image on the canvas widget, if possible
 	# Image is never streached by this operation
@@ -136,6 +142,8 @@ class AtlasGUI(tk.Tk):
 			# Resize the image
 			self.resizer()
 
+			#ADD LOAD slider features here
+
 	# Opens a Background Toolbar or raises it if it's already opened
 	def onBackgroundToolbar(self):
 		if(self.BackgroundToolbar == None):
@@ -153,6 +161,14 @@ class AtlasGUI(tk.Tk):
 			self.img_path = ''
 			self.image = None
 			self.photoImage = None
+
+		# === Handling Toolbars and saved sliders ===#
+		if self.BackgroundToolbar != None:
+			#if the toolbar exists, clear it's slider values
+			self.BackgroundToolbar.clearSliderValues()
+		#remove slider value references (ADD SAVE FEATURE HERE)
+		self.backgroundSliderValues = None
+
 
 
 	#Takes transformed image from toolbar and applies it to the canvas
