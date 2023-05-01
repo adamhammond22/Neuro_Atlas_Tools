@@ -1,13 +1,14 @@
 import tkinter as tk
 # from tkinter import filedialog
 from PIL import ImageTk, Image #python img library needed for resizing
+import PIL
 
 class BackgroundToolbar(tk.Toplevel):
 	def __init__(self, parent):
 		#Init parent toplevel
 		tk.Toplevel.__init__(self)
 
-		# Add basic characteristics
+		# Add basic window characteristics
 		self.geometry("300x500")
 		self.title("Background TB")
 		self.resizable(False, False)
@@ -27,29 +28,15 @@ class BackgroundToolbar(tk.Toplevel):
 			length=200, command=self.rotateImg)
 		self.sliders["Rotate"].pack()
 
-		# Check for parent's copy of slidervalues
-		if self.parent.backgroundSliderValues != None:
-			#if this is the case 1: the toolbar was closed and re-opened, 2: the parent loaded saved slider values
-
-			#save local copy of slidervalues
-			self.sliderValues = self.parent.backgroundSliderValues
-
-			#get rid of parent copy to save space
-			self.parent.backgroundSliderValues = None
-
-			#apply that copy of slidervalues
-			self.applySliderValues()
-		#Otherwise, make a clean copy of slidervalues and apply it
-		else:
-			self.clearSliderValues()
+		# Set Sliders to match background transformations
+		applySliderValues(self.parent.BackgroundTransformations, 
+			self.sliders)
 
 
 
 	# Remove parent's reference to this toolbar before deleting
 	def onClosing(self):
 
-		#save our sliderValues in the parent
-		self.parent.backgroundSliderValues = self.sliderValues
 
 		#destroy ourselves, and parents ref to us
 		self.parent.BackgroundToolbar = None
@@ -58,10 +45,10 @@ class BackgroundToolbar(tk.Toplevel):
 	#Rotates image based on slider value
 	def rotateImg(self, degree):
 		# if the slider value is different than the current degree
-		if self.sliderValues["Rotate"] != degree:
+		print(self.parent.BackgroundTransformations)
+		if self.parent.BackgroundTransformations["Rotate"] != degree:
 		
-			#save the degree as the slider value
-			self.sliderValues["Rotate"] = degree	
+
 
 			#if the image actually exists
 			if (self.parent.image != None):
@@ -69,33 +56,68 @@ class BackgroundToolbar(tk.Toplevel):
 				#open the image
 				image = self.parent.image
 
+				image = TransformImage(self.parent.image, "Rotate",
+					self.parent.BackgroundTransformations["Rotate"], degree)
+
+				#save the degree as the slider value
+				self.parent.BackgroundTransformations["Rotate"] = degree	
+
 				#rotate it
-				print("degree:", degree, int(degree))
-				image = image.rotate(int(degree),  resample=Image.BICUBIC)
+				# print("degree:", degree, int(degree)*)
+				# image = image.rotate(int(degree),  resample=Image.BICUBIC)
 
 				#send it to parent to be applied
 				self.parent.applyTransformedImage(image)
 
-	#makes a clean copy of slider values and applies it
-	def clearSliderValues(self):
-		self.sliderValues = {
-			"Rotate" : 0
-		}
+#makes a clean copy of slider refs and applies it
+def clearSliderValues(sliderRefs: dict):
+	sliderValues = {}
+	for sliderName, sliderRef in sliderRefs.items():
+		sliderValues[sliderName] = 0
 
-		#apply the cleared values
-		self.applySliderValues()
-
-	#Apply all slider values, syncing it with sliderValues Dict
-	def applySliderValues(self):
-		# iter through each slider in dict, setting the slider as it's value
-		for sliderName, sliderObject in self.sliders.items():
-			print("setting sliders", sliderName)
-			if sliderName in self.sliderValues:
-				print(sliderName, "is val", self.sliderValues[sliderName])
-				sliderObject.set(int(self.sliderValues[sliderName]))
-	def saveTransforms(self):
-		pass
+		#here we'd add exceptions for sliders that default to other places
 
 
-	def loadTransforms(self):
-		pass
+	#apply the cleared values
+	applySliderValues(sliderValues, sliderRefs)
+
+
+def saveTransforms(self):
+	pass
+
+
+def loadTransforms(self):
+	pass
+
+#Takes a Dictionary of Slider Values, and applies them to the provided slider dict
+def applySliderValues(sliderValues: dict, sliderRefs: dict):
+
+	# iter through each slider value setting the slider as it's value
+	for sliderName, sliderValue in sliderValues.items():
+		
+		#If the slider name is in the slider references
+		if sliderName in sliderRefs.keys():
+			
+			print("slider", sliderName, "successfully set to", sliderValue)
+			sliderRefs[sliderName].set(int(sliderValue))
+
+		else:
+			print("applySliderValues() Error: Provided sliderValues name ", sliderName,
+				"is not in slider reference keys", sliderRefs.keys())
+
+def TransformImage(working_image: PIL.Image.Image, sliderName: str, oldValue, newValue):
+	match sliderName:
+		case "Rotate":
+			degrees = int(newValue) - int(oldValue)
+			print("real degrees")
+			working_image = working_image.rotate(degrees, expand= True, resample=Image.BICUBIC)
+
+
+	return working_image
+
+
+
+def cleanBackgroundTransformations():
+	value = {"Rotate": 0}
+	#add more here
+	return value

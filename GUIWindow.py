@@ -27,6 +27,7 @@ class AtlasGUI(tk.Tk):
 
 		# ===== Handling image variables ===== #
 		# Initalzie image variables to something predictable
+		# Image must be stored to avoid tkinterGarbage Collection
 		self.img_path = ''
 		self.image = None
 		self.photoImage = None
@@ -67,8 +68,9 @@ class AtlasGUI(tk.Tk):
 		# Reference to toolbar object
 		self.BackgroundToolbar = None
 
-		#reference to slidervalues
-		self.backgroundSliderValues = None
+		# Dictionaries of all Image Transformations
+		self.BackgroundTransformations = cleanBackgroundTransformations()
+		#add more transforms
 
 	# Resizes the image on the canvas widget, if possible
 	# Image is never streached by this operation
@@ -167,7 +169,7 @@ class AtlasGUI(tk.Tk):
 			#if the toolbar exists, clear it's slider values
 			self.BackgroundToolbar.clearSliderValues()
 		#remove slider value references (ADD SAVE FEATURE HERE)
-		self.backgroundSliderValues = None
+		self.BackgroundTransformations = cleanBackgroundTransformations()
 
 
 
